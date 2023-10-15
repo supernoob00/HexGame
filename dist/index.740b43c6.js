@@ -1339,7 +1339,7 @@ class GameEvaluator {
         return this.chooseBestMoveAsMinimizer();
     }
     chooseBestMoveAsMaximizer() {
-        let max = GameEvaluator.MINIMAX_MIN_VAL;
+        let max = GameEvaluator.MINIMAX_MIN_VAL - 1;
         let bestMove;
         for (const node of this.board.playableNodes())if (node.getToken() === (0, _token.Token).EMPTY) {
             node.setToken(GameEvaluator.MAXIMIZER_TOKEN);
@@ -1353,8 +1353,7 @@ class GameEvaluator {
         return new (0, _move.Move)(bestMove.x, bestMove.y, GameEvaluator.MAXIMIZER_TOKEN);
     }
     chooseBestMoveAsMinimizer() {
-        let min = GameEvaluator.MINIMAX_MAX_VAL;
-        // TODO: change to a random node, may remain undefined otherwise
+        let min = GameEvaluator.MINIMAX_MAX_VAL + 1;
         let bestMove;
         for (const node of this.board.playableNodes())if (node.getToken() === (0, _token.Token).EMPTY) {
             node.setToken(GameEvaluator.MINIMIZER_TOKEN);

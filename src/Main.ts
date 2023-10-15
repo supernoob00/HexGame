@@ -48,3 +48,4 @@ let display = new Display(4, game);
 let handler = new LocalGameController(display);
 display.drawHexagons();
 display.addInputHandling(handler);
+console.log(game.board.nodes);

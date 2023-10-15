@@ -29,7 +29,7 @@ export class GameEvaluator {
     }
 
     private chooseBestMoveAsMaximizer(): Move {
-        let max = GameEvaluator.MINIMAX_MIN_VAL;
+        let max = GameEvaluator.MINIMAX_MIN_VAL - 1;
         let bestMove: HexNode;
 
         for (const node of this.board.playableNodes()) {
@@ -48,8 +48,7 @@ export class GameEvaluator {
     }
 
     private chooseBestMoveAsMinimizer(): Move {
-        let min = GameEvaluator.MINIMAX_MAX_VAL;
-        // TODO: change to a random node, may remain undefined otherwise
+        let min = GameEvaluator.MINIMAX_MAX_VAL + 1;
         let bestMove: HexNode;
 
         for (const node of this.board.playableNodes()) {
