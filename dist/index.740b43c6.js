@@ -580,7 +580,6 @@ var _game = require("./Game");
 var _localGameController = require("./LocalGameController");
 // create canvas element
 let CANVAS = document.getElementById("game-canvas");
-CANVAS.getContext("2d").translate(0.5, 0.5);
 // CANVAS.id = "game-canvas";
 // CANVAS.width = 600;
 // CANVAS.height = 600;
@@ -593,9 +592,9 @@ document.body.appendChild(newGameButton);
 newGameButton.onclick = ()=>{
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
-    game = new (0, _game.Game)(6);
+    game = new (0, _game.Game)(11);
     display = new (0, _display.Display)(4, game);
-    display.drawHexagons();
+    display.draw();
     display.addInputHandling(new (0, _localGameController.LocalGameController)(display));
 };
 const newGameAIButton = document.createElement("button");
@@ -605,25 +604,28 @@ document.body.appendChild(newGameAIButton);
 newGameAIButton.onclick = ()=>{
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
-    game = new (0, _game.Game)(6);
+    game = new (0, _game.Game)(11);
+    console.log(game.board);
     display = new (0, _display.Display)(4, game);
-    display.drawHexagons();
+    console.log(display.game.board);
+    display.draw();
     display.addInputHandling(new (0, _aigameController.AIGameController)(display));
 };
 // start game
-let game = new (0, _game.Game)(6);
+let game = new (0, _game.Game)(11);
 let display = new (0, _display.Display)(4, game);
 let handler = new (0, _localGameController.LocalGameController)(display);
-display.drawHexagons();
+display.draw();
 display.addInputHandling(handler);
+console.log(game.board.nodes);
 
 },{"./Display":"8PhuN","./Game":"jePnd","./AIGameController":"aSLr4","./LocalGameController":"aY4Fa"}],"8PhuN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Display", ()=>Display);
 var _token = require("./Token");
-var _drawUtil = require("./DrawUtil");
 "use strict";
+var _a;
 class Display {
     constructor(gap, game){
         this.CANVAS = document.getElementById("game-canvas");
@@ -635,27 +637,61 @@ class Display {
         this.gap = gap;
         this.game = game;
         this.sideCount = game.board.size;
-        this.hexRadius = (this.CANVAS_WIDTH - gap * (this.sideCount + 1)) / (this.sideCount * (3 * Math.sqrt(3) / 2));
+        this.hexRadius = this.CANVAS_HEIGHT / this.sideCount * 0.5;
         this.hexFlatToFlat = this.hexRadius * Math.sqrt(3);
         this.bottomOffset = this.hexFlatToFlat / 2 * this.sideCount;
         this.totalGapLength = gap * (this.sideCount + 1);
-        this.hexPaths2D = this.createHexPaths2D(Display.GRID_ORIGIN_X, Display.GRID_ORIGIN_Y);
+        this.hexPaths2D = this.createHexPaths2D(_a.GRID_ORIGIN_X, _a.GRID_ORIGIN_Y);
         this.inputActive = true;
+        this.activeHoverNode = null;
     }
     /**
      * Draws a grid of hexagons to the canvas.
      */ drawHexagons() {
         this.CTX.strokeStyle = "black";
-        for (const row of this.hexPaths2D)for (const path of row)this.CTX.stroke(path);
+        this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+        for (const row of this.hexPaths2D)for (const path of row){
+            this.CTX.stroke(path);
+            this.CTX.fill(path);
+        }
     }
     drawBorder() {
         // draw red border
-        this.CTX.fillStyle = Display.RED_COLOR_VALUE;
+        this.CTX.fillStyle = _a.RED_COLOR_VALUE;
+    }
+    drawText() {
+        this.CTX.font = _a.FONT;
+        this.CTX.fillStyle = _a.FONT_COLOR;
+        const letters = [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L"
+        ];
+        const coordOriginX = _a.CANVAS_HRZ_BORDER + this.bottomOffset + this.gap * 3;
+        const coordOriginY = _a.CANVAS_VERT_BORDER + (this.hexFlatToFlat / 2 * Math.sqrt(3) + this.gap) * this.sideCount;
+        // draw column letters
+        for(let i = 0; i < this.sideCount; i++)this.CTX.fillText(letters[i], coordOriginX + (this.hexFlatToFlat + this.gap) * i, coordOriginY);
+        // draw row numbers
+        for(let j = 0; j < this.sideCount; j++){
+            const numText = (j + 1).toString();
+            const numTextWidth = this.CTX.measureText(numText).width;
+            this.CTX.fillText(numText, 30 - numTextWidth + (this.gap / 2 + this.hexFlatToFlat / 2) * j, _a.CANVAS_VERT_BORDER + 2 + this.gap + (this.gap + this.hexFlatToFlat / 2 * Math.sqrt(3)) * j);
+        }
     }
     /**
      * Draws current game state to canvas.
-     */ drawGameState() {
+     */ draw() {
         this.drawHexagons();
+        this.drawText();
     }
     /**
      * Fills hexagon at (x, y) position with given color, representing a token placed.
@@ -665,21 +701,19 @@ class Display {
      * @param token the token color used to fill the hexagon
      */ fillHexagon(x, y, token) {
         const path2D = this.hexPaths2D[x][y];
-        if (token === (0, _token.Token).RED) this.CTX.fillStyle = Display.RED_COLOR_VALUE;
-        else this.CTX.fillStyle = Display.BLUE_COLOR_VALUE;
+        if (token === (0, _token.Token).RED) this.CTX.fillStyle = _a.RED_COLOR_VALUE;
+        else this.CTX.fillStyle = _a.BLUE_COLOR_VALUE;
         this.CTX.fill(path2D);
     }
-    drawTrail(coords) {
-        this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
+    drawTrail(nodes) {
+        this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
         const r = 1;
         // TODO: clean up derived values
         const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
-        for(let i = 0; i < coords.length - 1; i++){
-            const x1 = coords[i][0];
-            const y1 = coords[i][1];
-            const x2 = coords[i + 1][0];
-            const y2 = coords[i + 1][1];
-            (0, _drawUtil.DrawUtil).drawLine(this.CTX, x1, y1, x2, y2);
+        for (const node of nodes){
+            const path2d = this.hexPaths2D[node.x][node.y];
+            this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
+            this.CTX.fill(path2d);
         }
     }
     /**
@@ -694,9 +728,9 @@ class Display {
         let y = centerY - r;
         const path = new Path2D();
         path.moveTo(x, y);
-        for(let i = 0; i < Display.HEXAGON_SIDE_COUNT; i++){
-            x += r * Math.cos(Display.HEXAGON_INTERIOR_ANGLE / 2 + i * Display.HEXAGON_INTERIOR_ANGLE);
-            y += r * Math.sin(Display.HEXAGON_INTERIOR_ANGLE / 2 + i * Display.HEXAGON_INTERIOR_ANGLE);
+        for(let i = 0; i < _a.HEXAGON_SIDE_COUNT; i++){
+            x += r * Math.cos(_a.HEXAGON_INTERIOR_ANGLE / 2 + i * _a.HEXAGON_INTERIOR_ANGLE);
+            y += r * Math.sin(_a.HEXAGON_INTERIOR_ANGLE / 2 + i * _a.HEXAGON_INTERIOR_ANGLE);
             path.lineTo(x, y);
         }
         return path;
@@ -745,18 +779,45 @@ class Display {
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
             for(let i = 0; i < this.sideCount; i++)for(let j = 0; j < this.sideCount; j++){
                 const path = this.hexPaths2D[i][j];
-                if (this.CTX.isPointInPath(path, x, y) && this.game.getToken(i, j) === (0, _token.Token).EMPTY) controller.applyMove(i, j);
+                if (this.CTX.isPointInPath(path, x, y) && this.game.getToken(i, j) === (0, _token.Token).EMPTY) {
+                    this.activeHoverNode = null;
+                    controller.applyMove(i, j);
+                    return;
+                }
             }
         });
-        this.CANVAS.addEventListener("mouseover", (event)=>{
+        // TODO: wrong hover color when playing AI after turn change
+        this.CANVAS.addEventListener("mousemove", (event)=>{
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
             const tokenToPlace = this.game.getCurrentPlayer();
-            if (tokenToPlace === (0, _token.Token).RED) this.CTX.fillStyle = Display.RED_HOVER_COLOR;
-            else this.CTX.fillStyle = Display.BLUE_HOVER_COLOR;
-            for(let i = 0; i < 6; i++)for(let j = 0; j < 6; j++){
+            const color = tokenToPlace === (0, _token.Token).RED ? _a.RED_HOVER_COLOR : _a.BLUE_HOVER_COLOR;
+            const oldHoverNode = this.activeHoverNode;
+            for(let i = 0; i < this.sideCount; i++)for(let j = 0; j < this.sideCount; j++){
                 const path = this.hexPaths2D[i][j];
-                if (this.CTX.isPointInPath(path, x, y) && this.game.getToken(i, j) === (0, _token.Token).EMPTY) this.CTX.fill(path);
+                if (this.CTX.isPointInPath(path, x, y) && this.game.getToken(i, j) === (0, _token.Token).EMPTY) {
+                    if (path === this.activeHoverNode) {
+                        this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                        this.CTX.fill(path);
+                        this.CTX.fillStyle = color;
+                        this.CTX.fill(path);
+                    } else {
+                        if (this.activeHoverNode !== null) {
+                            this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                            this.CTX.stroke(this.activeHoverNode);
+                            this.CTX.fill(this.activeHoverNode);
+                        }
+                        this.CTX.fill(path);
+                        this.activeHoverNode = path;
+                    }
+                    return;
+                }
+            }
+            if (this.activeHoverNode !== null) {
+                this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                this.CTX.stroke(this.activeHoverNode);
+                this.CTX.fill(this.activeHoverNode);
+                this.activeHoverNode = null;
             }
         });
         // cursor changes to pointer when hovering over canvas
@@ -769,20 +830,24 @@ class Display {
         });
     }
 }
+_a = Display;
 // border widths around game board
-Display.CANVAS_HRZ_BORDER = 100;
-Display.CANVAS_VERT_BORDER = 100;
+Display.CANVAS_HRZ_BORDER = 60;
+Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;
 Display.HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
+Display.FONT = "bold 16px sans-serif";
+Display.FONT_COLOR = "black";
 Display.RED_COLOR_VALUE = "red";
 Display.BLUE_COLOR_VALUE = "blue";
 Display.RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";
 Display.BLUE_HOVER_COLOR = "rgba(0, 0, 200, 0.3)";
 Display.TRAIL_COLOR_VALUE = "yellow";
-Display.GRID_ORIGIN_X = 50;
-Display.GRID_ORIGIN_Y = 50;
+Display.EMPTY_TILE_COLOR = "lightgrey";
+Display.GRID_ORIGIN_X = _a.CANVAS_HRZ_BORDER;
+Display.GRID_ORIGIN_Y = _a.CANVAS_VERT_BORDER;
 
-},{"./Token":"dekBv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./DrawUtil":"bERt7"}],"dekBv":[function(require,module,exports) {
+},{"./Token":"dekBv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dekBv":[function(require,module,exports) {
 /**
  * Represents the three possible, singular states of each tile on the Hex game board.
  * The common convention is for red to go first.
@@ -826,20 +891,7 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"bERt7":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "DrawUtil", ()=>DrawUtil);
-class DrawUtil {
-    static drawLine(ctx, x1, y1, x2, y2) {
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-    }
-}
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jePnd":[function(require,module,exports) {
+},{}],"jePnd":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Game", ()=>Game);
@@ -886,8 +938,8 @@ class Game {
     }
     getWinBridge() {
         if (!this.isGameOver()) throw Error("Game is not over.");
-        if (this.getWinner() === (0, _token.Token).RED) return this.board.BFS(this.board.topVirtualNode, this.board.bottomVirtualNode, (0, _token.Token).RED);
-        else return this.board.BFS(this.board.leftVirtualNode, this.board.rightVirtualNode, (0, _token.Token).BLUE);
+        if (this.getWinner() === (0, _token.Token).RED) return this.board.BFS(this.board.topVirtualNode, this.board.bottomVirtualNode, (0, _token.Token).RED).slice(1, -1);
+        else return this.board.BFS(this.board.leftVirtualNode, this.board.rightVirtualNode, (0, _token.Token).BLUE).slice(1, -1);
     }
 }
 
@@ -920,6 +972,7 @@ class Board {
         // bottom left corner
         if (i === size - 1 && j === 0) return [
             size * (size - 2),
+            size * (size - 2) + 1,
             size * (size - 1) + 1
         ];
         // bottom right corner
@@ -930,7 +983,8 @@ class Board {
         // top right corner
         if (i === 0 && j === size - 1) return [
             size - 2,
-            2 * size - 1
+            2 * size - 1,
+            2 * size - 2
         ];
         // top edge except corners
         if (i === 0) return [
@@ -1050,6 +1104,9 @@ class Board {
         const index = this.getIndex(x, y);
         const selectedNode = this.nodes[index];
         selectedNode.setToken((0, _token.Token).EMPTY);
+    }
+    getNode(x, y) {
+        return this.nodes[this.getIndex(x, y)];
     }
     connected(node1, node2, token) {
         if (node1.index === node2.index) throw Error("Arguments cannot refer to the same node.");
@@ -1286,26 +1343,48 @@ class Deque {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "AIGameController", ()=>AIGameController);
+var _token = require("./Token");
 var _gameEvaluator = require("./GameEvaluator");
 class AIGameController {
     constructor(display){
         this.display = display;
         this.game = display.game;
         this.evaluator = new (0, _gameEvaluator.GameEvaluator)(this.game.board, 1);
+        this.firstMovePlayed = false;
     }
     applyMove(x, y) {
         this.placeToken(x, y);
-        console.log(this.game.getCurrentPlayer());
         if (this.game.isWinner(this.game.getCurrentPlayer())) this.setWinner();
         else {
             this.game.switchPlayer();
-            const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
-            this.placeToken(bestMove.row, bestMove.col);
-            if (this.game.isWinner(this.game.getCurrentPlayer())) {
-                console.log("AI wins!");
-                this.setWinner();
-            } else this.game.switchPlayer();
+            if (this.firstMovePlayed) setTimeout(this.aiMove.bind(this), 200);
+            else {
+                this.firstMovePlayed = true;
+                setTimeout(this.aiRandomMove.bind(this), 200);
+            }
         }
+    }
+    aiMove() {
+        const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        this.placeToken(bestMove.x, bestMove.y);
+        if (this.game.isWinner(this.game.getCurrentPlayer())) {
+            console.log("AI wins!");
+            this.setWinner();
+        } else this.game.switchPlayer();
+    }
+    aiRandomMove() {
+        console.log("called");
+        let availableMoves = [];
+        for (const node of this.game.board.playableNodes())if (node.getToken() === (0, _token.Token).EMPTY) availableMoves.push(node);
+        if (availableMoves.length === 0) throw Error("No available moves");
+        const random = Math.floor(Math.random() * availableMoves.length);
+        const randomMove = availableMoves[random];
+        console.log(randomMove);
+        this.placeToken(randomMove.x, randomMove.y);
+        if (this.game.isWinner(this.game.getCurrentPlayer())) {
+            console.log("AI wins!");
+            this.setWinner();
+        } else this.game.switchPlayer();
     }
     placeToken(x, y) {
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
@@ -1323,12 +1402,11 @@ class AIGameController {
     }
 }
 
-},{"./GameEvaluator":"6Bvtg","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6Bvtg":[function(require,module,exports) {
+},{"./GameEvaluator":"6Bvtg","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./Token":"dekBv"}],"6Bvtg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "GameEvaluator", ()=>GameEvaluator);
 var _token = require("./Token");
-var _move = require("./Move");
 class GameEvaluator {
     constructor(board, searchDepth){
         this.board = board;
@@ -1350,7 +1428,7 @@ class GameEvaluator {
                 bestMove = node;
             }
         }
-        return new (0, _move.Move)(bestMove.x, bestMove.y, GameEvaluator.MAXIMIZER_TOKEN);
+        return bestMove;
     }
     chooseBestMoveAsMinimizer() {
         let min = GameEvaluator.MINIMAX_MAX_VAL + 1;
@@ -1364,7 +1442,7 @@ class GameEvaluator {
                 bestMove = node;
             }
         }
-        return new (0, _move.Move)(bestMove.x, bestMove.y, GameEvaluator.MINIMIZER_TOKEN);
+        return bestMove;
     }
     evaluate() {
         const redMovesLeft = this.board.shortestPathLength(this.board.topVirtualNode, this.board.bottomVirtualNode, (0, _token.Token).RED);
@@ -1408,19 +1486,7 @@ GameEvaluator.MINIMAX_MIN_VAL = -1000;
 GameEvaluator.MAXIMIZER_TOKEN = (0, _token.Token).RED;
 GameEvaluator.MINIMIZER_TOKEN = (0, _token.Token).BLUE;
 
-},{"./Token":"dekBv","./Move":"1YKtr","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1YKtr":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Move", ()=>Move);
-class Move {
-    constructor(row, col, player){
-        this.row = row;
-        this.col = col;
-        this.player = player;
-    }
-}
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aY4Fa":[function(require,module,exports) {
+},{"./Token":"dekBv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aY4Fa":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "LocalGameController", ()=>LocalGameController);
@@ -1438,9 +1504,7 @@ class LocalGameController {
             this.game.setWinner(currentPlayer);
             this.display.disableInput();
             const winBridge = this.game.getWinBridge();
-            //this.display.drawTrail(
-            //    winBridge.map(node => [node.x, node.y]).slice(1, -1));
-            console.log(winBridge);
+            this.display.drawTrail(winBridge);
             console.log(this.game.getWinner() + " won!");
         } else this.game.switchPlayer();
     }

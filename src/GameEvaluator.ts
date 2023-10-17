@@ -5,7 +5,6 @@ import { HexNode } from "./HexNode";
 import { Deque } from "./Deque";
 import { Token } from "./Token";
 import {  } from "module";
-import { Move } from "./Move";
 
 export class GameEvaluator {
     static readonly MINIMAX_MAX_VAL = 1000;
@@ -21,14 +20,14 @@ export class GameEvaluator {
         this.searchDepth = searchDepth;
     }
 
-    chooseBestMove(tokenToPlace: Token.RED | Token.BLUE): Move {
+    chooseBestMove(tokenToPlace: Token.RED | Token.BLUE): HexNode {
         if (tokenToPlace === Token.RED) {
             return this.chooseBestMoveAsMaximizer();
         }
         return this.chooseBestMoveAsMinimizer();
     }
 
-    private chooseBestMoveAsMaximizer(): Move {
+    private chooseBestMoveAsMaximizer(): HexNode {
         let max = GameEvaluator.MINIMAX_MIN_VAL - 1;
         let bestMove: HexNode;
 
@@ -44,10 +43,10 @@ export class GameEvaluator {
                 }
             }
         }
-        return new Move(bestMove.x, bestMove.y, GameEvaluator.MAXIMIZER_TOKEN);
+        return bestMove;
     }
 
-    private chooseBestMoveAsMinimizer(): Move {
+    private chooseBestMoveAsMinimizer(): HexNode {
         let min = GameEvaluator.MINIMAX_MAX_VAL + 1;
         let bestMove: HexNode;
 
@@ -63,7 +62,7 @@ export class GameEvaluator {
                 }
             }
         }
-        return new Move(bestMove.x, bestMove.y, GameEvaluator.MINIMIZER_TOKEN);
+        return bestMove;
     }
  
     private evaluate(): number {

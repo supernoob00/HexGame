@@ -1,6 +1,6 @@
 "use strict";
+var _a;
 import { Token } from "./Token";
-import { DrawUtil } from "./DrawUtil";
 export class Display {
     constructor(gap, game) {
         this.CANVAS = document.getElementById("game-canvas");
@@ -12,33 +12,54 @@ export class Display {
         this.gap = gap;
         this.game = game;
         this.sideCount = game.board.size;
-        this.hexRadius = (this.CANVAS_WIDTH - gap * (this.sideCount + 1)) / (this.sideCount * (3 * Math.sqrt(3) / 2));
+        this.hexRadius = (this.CANVAS_HEIGHT / this.sideCount) * 0.5;
         this.hexFlatToFlat = this.hexRadius * Math.sqrt(3);
         this.bottomOffset = this.hexFlatToFlat / 2 * this.sideCount;
         this.totalGapLength = gap * (this.sideCount + 1);
-        this.hexPaths2D = this.createHexPaths2D(Display.GRID_ORIGIN_X, Display.GRID_ORIGIN_Y);
+        this.hexPaths2D = this.createHexPaths2D(_a.GRID_ORIGIN_X, _a.GRID_ORIGIN_Y);
         this.inputActive = true;
+        this.activeHoverNode = null;
     }
     /**
      * Draws a grid of hexagons to the canvas.
      */
     drawHexagons() {
         this.CTX.strokeStyle = "black";
+        this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
         for (const row of this.hexPaths2D) {
             for (const path of row) {
                 this.CTX.stroke(path);
+                this.CTX.fill(path);
             }
         }
     }
     drawBorder() {
         // draw red border
-        this.CTX.fillStyle = Display.RED_COLOR_VALUE;
+        this.CTX.fillStyle = _a.RED_COLOR_VALUE;
+    }
+    drawText() {
+        this.CTX.font = _a.FONT;
+        this.CTX.fillStyle = _a.FONT_COLOR;
+        const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+        const coordOriginX = _a.CANVAS_HRZ_BORDER + this.bottomOffset + this.gap * 3;
+        const coordOriginY = _a.CANVAS_VERT_BORDER + (this.hexFlatToFlat / 2 * Math.sqrt(3) + this.gap) * this.sideCount;
+        // draw column letters
+        for (let i = 0; i < this.sideCount; i++) {
+            this.CTX.fillText(letters[i], coordOriginX + (this.hexFlatToFlat + this.gap) * i, coordOriginY);
+        }
+        // draw row numbers
+        for (let j = 0; j < this.sideCount; j++) {
+            const numText = (j + 1).toString();
+            const numTextWidth = this.CTX.measureText(numText).width;
+            this.CTX.fillText(numText, (30 - numTextWidth) + (this.gap / 2 + this.hexFlatToFlat / 2) * j, _a.CANVAS_VERT_BORDER + 2 + this.gap + (this.gap + this.hexFlatToFlat / 2 * Math.sqrt(3)) * j);
+        }
     }
     /**
      * Draws current game state to canvas.
      */
-    drawGameState() {
+    draw() {
         this.drawHexagons();
+        this.drawText();
     }
     /**
      * Fills hexagon at (x, y) position with given color, representing a token placed.
@@ -50,24 +71,22 @@ export class Display {
     fillHexagon(x, y, token) {
         const path2D = this.hexPaths2D[x][y];
         if (token === Token.RED) {
-            this.CTX.fillStyle = Display.RED_COLOR_VALUE;
+            this.CTX.fillStyle = _a.RED_COLOR_VALUE;
         }
         else {
-            this.CTX.fillStyle = Display.BLUE_COLOR_VALUE;
+            this.CTX.fillStyle = _a.BLUE_COLOR_VALUE;
         }
         this.CTX.fill(path2D);
     }
-    drawTrail(coords) {
-        this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
+    drawTrail(nodes) {
+        this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
         const r = 1;
         // TODO: clean up derived values
         const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
-        for (let i = 0; i < coords.length - 1; i++) {
-            const x1 = coords[i][0];
-            const y1 = coords[i][1];
-            const x2 = coords[i + 1][0];
-            const y2 = coords[i + 1][1];
-            DrawUtil.drawLine(this.CTX, x1, y1, x2, y2);
+        for (const node of nodes) {
+            const path2d = this.hexPaths2D[node.x][node.y];
+            this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
+            this.CTX.fill(path2d);
         }
     }
     /**
@@ -83,9 +102,9 @@ export class Display {
         let y = centerY - r;
         const path = new Path2D();
         path.moveTo(x, y);
-        for (let i = 0; i < Display.HEXAGON_SIDE_COUNT; i++) {
-            x += r * Math.cos(Display.HEXAGON_INTERIOR_ANGLE / 2 + i * Display.HEXAGON_INTERIOR_ANGLE);
-            y += r * Math.sin(Display.HEXAGON_INTERIOR_ANGLE / 2 + i * Display.HEXAGON_INTERIOR_ANGLE);
+        for (let i = 0; i < _a.HEXAGON_SIDE_COUNT; i++) {
+            x += r * Math.cos(_a.HEXAGON_INTERIOR_ANGLE / 2 + i * _a.HEXAGON_INTERIOR_ANGLE);
+            y += r * Math.sin(_a.HEXAGON_INTERIOR_ANGLE / 2 + i * _a.HEXAGON_INTERIOR_ANGLE);
             path.lineTo(x, y);
         }
         return path;
@@ -143,29 +162,50 @@ export class Display {
                     const path = this.hexPaths2D[i][j];
                     if (this.CTX.isPointInPath(path, x, y)
                         && this.game.getToken(i, j) === Token.EMPTY) {
+                        this.activeHoverNode = null;
                         controller.applyMove(i, j);
+                        return;
                     }
                 }
             }
         });
-        this.CANVAS.addEventListener("mouseover", (event) => {
+        // TODO: wrong hover color when playing AI after turn change
+        this.CANVAS.addEventListener("mousemove", (event) => {
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
             const tokenToPlace = this.game.getCurrentPlayer();
-            if (tokenToPlace === Token.RED) {
-                this.CTX.fillStyle = Display.RED_HOVER_COLOR;
-            }
-            else {
-                this.CTX.fillStyle = Display.BLUE_HOVER_COLOR;
-            }
-            for (let i = 0; i < 6; i++) {
-                for (let j = 0; j < 6; j++) {
+            const color = tokenToPlace ===
+                Token.RED ? _a.RED_HOVER_COLOR : _a.BLUE_HOVER_COLOR;
+            const oldHoverNode = this.activeHoverNode;
+            for (let i = 0; i < this.sideCount; i++) {
+                for (let j = 0; j < this.sideCount; j++) {
                     const path = this.hexPaths2D[i][j];
                     if (this.CTX.isPointInPath(path, x, y)
                         && this.game.getToken(i, j) === Token.EMPTY) {
-                        this.CTX.fill(path);
+                        if (path === this.activeHoverNode) {
+                            this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                            this.CTX.fill(path);
+                            this.CTX.fillStyle = color;
+                            this.CTX.fill(path);
+                        }
+                        else {
+                            if (this.activeHoverNode !== null) {
+                                this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                                this.CTX.stroke(this.activeHoverNode);
+                                this.CTX.fill(this.activeHoverNode);
+                            }
+                            this.CTX.fill(path);
+                            this.activeHoverNode = path;
+                        }
+                        return;
                     }
                 }
+            }
+            if (this.activeHoverNode !== null) {
+                this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
+                this.CTX.stroke(this.activeHoverNode);
+                this.CTX.fill(this.activeHoverNode);
+                this.activeHoverNode = null;
             }
         });
         // cursor changes to pointer when hovering over canvas
@@ -178,16 +218,20 @@ export class Display {
         });
     }
 }
+_a = Display;
 // border widths around game board
-Display.CANVAS_HRZ_BORDER = 100;
-Display.CANVAS_VERT_BORDER = 100;
+Display.CANVAS_HRZ_BORDER = 60;
+Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;
 Display.HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
+Display.FONT = "bold 16px sans-serif";
+Display.FONT_COLOR = "black";
 Display.RED_COLOR_VALUE = "red";
 Display.BLUE_COLOR_VALUE = "blue";
 Display.RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";
 Display.BLUE_HOVER_COLOR = "rgba(0, 0, 200, 0.3)";
 Display.TRAIL_COLOR_VALUE = "yellow";
-Display.GRID_ORIGIN_X = 50;
-Display.GRID_ORIGIN_Y = 50;
+Display.EMPTY_TILE_COLOR = "lightgrey";
+Display.GRID_ORIGIN_X = _a.CANVAS_HRZ_BORDER;
+Display.GRID_ORIGIN_Y = _a.CANVAS_VERT_BORDER;
 //# sourceMappingURL=Display.js.map

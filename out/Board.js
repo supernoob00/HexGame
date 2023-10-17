@@ -23,7 +23,7 @@ export class Board {
         }
         // bottom left corner
         if (i === size - 1 && j === 0) {
-            return [size * (size - 2), size * (size - 1) + 1];
+            return [size * (size - 2), size * (size - 2) + 1, size * (size - 1) + 1];
         }
         // bottom right corner
         if (i === size - 1 && j === size - 1) {
@@ -31,7 +31,7 @@ export class Board {
         }
         // top right corner
         if (i === 0 && j === size - 1) {
-            return [size - 2, 2 * size - 1];
+            return [size - 2, 2 * size - 1, 2 * size - 2];
         }
         // top edge except corners
         if (i === 0) {
@@ -158,6 +158,9 @@ export class Board {
         const index = this.getIndex(x, y);
         const selectedNode = this.nodes[index];
         selectedNode.setToken(Token.EMPTY);
+    }
+    getNode(x, y) {
+        return this.nodes[this.getIndex(x, y)];
     }
     connected(node1, node2, token) {
         if (node1.index === node2.index) {

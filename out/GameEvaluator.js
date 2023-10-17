@@ -1,5 +1,4 @@
 import { Token } from "./Token";
-import { Move } from "./Move";
 export class GameEvaluator {
     constructor(board, searchDepth) {
         this.board = board;
@@ -25,7 +24,7 @@ export class GameEvaluator {
                 }
             }
         }
-        return new Move(bestMove.x, bestMove.y, GameEvaluator.MAXIMIZER_TOKEN);
+        return bestMove;
     }
     chooseBestMoveAsMinimizer() {
         let min = GameEvaluator.MINIMAX_MAX_VAL + 1;
@@ -41,7 +40,7 @@ export class GameEvaluator {
                 }
             }
         }
-        return new Move(bestMove.x, bestMove.y, GameEvaluator.MINIMIZER_TOKEN);
+        return bestMove;
     }
     evaluate() {
         const redMovesLeft = this.board.shortestPathLength(this.board.topVirtualNode, this.board.bottomVirtualNode, Token.RED);

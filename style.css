@@ -1,3 +1,9 @@
-#canvas {
+html, body {
+    width:  100%;
+    height: 100%;
+    margin: 0;
+}
+
+#game-canvas {
     border: 2px solid black;
 }

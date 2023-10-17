@@ -56,10 +56,10 @@ export class Game {
             throw Error("Game is not over.");
         }
         if (this.getWinner() === Token.RED) {
-            return this.board.BFS(this.board.topVirtualNode, this.board.bottomVirtualNode, Token.RED);
+            return this.board.BFS(this.board.topVirtualNode, this.board.bottomVirtualNode, Token.RED).slice(1, -1);
         }
         else {
-            return this.board.BFS(this.board.leftVirtualNode, this.board.rightVirtualNode, Token.BLUE);
+            return this.board.BFS(this.board.leftVirtualNode, this.board.rightVirtualNode, Token.BLUE).slice(1, -1);
         }
     }
 }

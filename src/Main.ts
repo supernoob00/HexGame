@@ -6,7 +6,6 @@ import { LocalGameController } from "./LocalGameController";
 
 // create canvas element
 let CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
-CANVAS.getContext("2d").translate(0.5, 0.5);
 // CANVAS.id = "game-canvas";
 // CANVAS.width = 600;
 // CANVAS.height = 600;
@@ -21,9 +20,9 @@ document.body.appendChild(newGameButton);
 newGameButton.onclick = () => {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
-    game = new Game(6);
+    game = new Game(11);
     display = new Display(4, game);
-    display.drawHexagons();
+    display.draw();
     display.addInputHandling(new LocalGameController(display));
 };
 
@@ -36,16 +35,18 @@ document.body.appendChild(newGameAIButton);
 newGameAIButton.onclick = () => {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
-    game = new Game(6);
+    game = new Game(11);
+    console.log(game.board);
     display = new Display(4, game);
-    display.drawHexagons();
+    console.log(display.game.board);
+    display.draw();
     display.addInputHandling(new AIGameController(display));
 }
 
 // start game
-let game = new Game(6);
+let game = new Game(11);
 let display = new Display(4, game);
 let handler = new LocalGameController(display);
-display.drawHexagons();
+display.draw();
 display.addInputHandling(handler);
 console.log(game.board.nodes);

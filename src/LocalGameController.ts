@@ -22,9 +22,7 @@ export class LocalGameController implements Controller {
             this.game.setWinner(currentPlayer);
             this.display.disableInput();
             const winBridge = this.game.getWinBridge();
-            //this.display.drawTrail(
-            //    winBridge.map(node => [node.x, node.y]).slice(1, -1));
-            console.log(winBridge);
+            this.display.drawTrail(winBridge);
             console.log(this.game.getWinner() + " won!");
         } else {
             this.game.switchPlayer();

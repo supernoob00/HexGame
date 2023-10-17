@@ -84,13 +84,13 @@ export class Game {
                 this.board.topVirtualNode,
                 this.board.bottomVirtualNode,
                 Token.RED
-            );
+            ).slice(1, -1);
         } else {
             return this.board.BFS(
                 this.board.leftVirtualNode,
                 this.board.rightVirtualNode,
                 Token.BLUE
-            );
+            ).slice(1, -1);
         }
     }
 }

@@ -4,6 +4,7 @@ import { Token } from "./Token";
 import { Controller } from "./Controller";
 import { DrawUtil } from "./DrawUtil";
 import { Game } from "./Game";
+import { HexNode } from "./HexNode";
 
 export class Display {
     readonly CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
@@ -14,20 +15,24 @@ export class Display {
     readonly CANVAS_ORIGIN_Y = this.CANVAS.offsetTop + this.CANVAS.clientTop;
 
     // border widths around game board
-    static readonly CANVAS_HRZ_BORDER = 100;
-    static readonly CANVAS_VERT_BORDER = 100;
+    static readonly CANVAS_HRZ_BORDER = 60;
+    static readonly CANVAS_VERT_BORDER = 50;
 
     static readonly HEXAGON_SIDE_COUNT = 6;
     static readonly HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
+
+    static readonly FONT = "bold 16px sans-serif";
+    static readonly FONT_COLOR = "black";
 
     static readonly RED_COLOR_VALUE = "red";
     static readonly BLUE_COLOR_VALUE = "blue";
     static readonly RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";
     static readonly BLUE_HOVER_COLOR = "rgba(0, 0, 200, 0.3)";
     static readonly TRAIL_COLOR_VALUE = "yellow";
+    static readonly EMPTY_TILE_COLOR = "lightgrey";
 
-    static readonly GRID_ORIGIN_X = 50;
-    static readonly GRID_ORIGIN_Y = 50;
+    static readonly GRID_ORIGIN_X = this.CANVAS_HRZ_BORDER;
+    static readonly GRID_ORIGIN_Y = this.CANVAS_VERT_BORDER;
 
     readonly gap: number;
     readonly sideCount: number;
@@ -46,6 +51,8 @@ export class Display {
 
     public inputActive: boolean;
 
+    private activeHoverNode: Path2D | null;
+
     // view can access the game object to get information about it, but should not 
     // modify it in any way -- that's the responsibility of the controller
     readonly game: Game;
@@ -55,23 +62,26 @@ export class Display {
         this.game = game;
         this.sideCount = game.board.size;
 
-        this.hexRadius = (this.CANVAS_WIDTH - gap * (this.sideCount + 1)) / (this.sideCount * (3 * Math.sqrt(3) / 2));
+        this.hexRadius = (this.CANVAS_HEIGHT / this.sideCount) * 0.5;
         this.hexFlatToFlat = this.hexRadius * Math.sqrt(3);
         this.bottomOffset = this.hexFlatToFlat / 2 * this.sideCount;
         this.totalGapLength = gap * (this.sideCount + 1);
 
         this.hexPaths2D = this.createHexPaths2D(Display.GRID_ORIGIN_X, Display.GRID_ORIGIN_Y);
         this.inputActive = true;
+        this.activeHoverNode = null;
     }
 
     /**
      * Draws a grid of hexagons to the canvas.
      */
-    drawHexagons(): void {
+    private drawHexagons(): void {
         this.CTX.strokeStyle = "black";
+        this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
         for (const row of this.hexPaths2D) {
             for (const path of row) {
                 this.CTX.stroke(path);
+                this.CTX.fill(path);
             }
         }
     }
@@ -81,11 +91,40 @@ export class Display {
         this.CTX.fillStyle = Display.RED_COLOR_VALUE;
     }
 
+    private drawText(): void {
+        this.CTX.font = Display.FONT;
+        this.CTX.fillStyle = Display.FONT_COLOR;
+
+        const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+        const coordOriginX = Display.CANVAS_HRZ_BORDER + this.bottomOffset + this.gap * 3;
+        const coordOriginY = Display.CANVAS_VERT_BORDER + (this.hexFlatToFlat / 2 * Math.sqrt(3) + this.gap) * this.sideCount;
+
+        // draw column letters
+        for (let i = 0; i < this.sideCount; i++) {
+            this.CTX.fillText(
+                letters[i], 
+                coordOriginX + (this.hexFlatToFlat + this.gap) * i,
+                coordOriginY);
+        }
+        // draw row numbers
+        for (let j = 0; j < this.sideCount; j++) {
+            const numText = (j + 1).toString();
+            const numTextWidth = this.CTX.measureText(numText).width;
+            this.CTX.fillText(
+                numText,
+                (30 - numTextWidth) + (this.gap / 2 + this.hexFlatToFlat / 2) * j,
+                Display.CANVAS_VERT_BORDER + 2 + this.gap + (this.gap + this.hexFlatToFlat / 2 * Math.sqrt(3)) * j
+            );
+        }
+
+    }
+
     /**
      * Draws current game state to canvas.
      */
-    drawGameState(): void {
+    draw(): void {
         this.drawHexagons();
+        this.drawText();
     }
 
     /**
@@ -105,19 +144,16 @@ export class Display {
         this.CTX.fill(path2D);
     }
 
-    drawTrail(coords: number[][]) {
+    drawTrail(nodes: HexNode[]) {
         this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
         const r = 1;
         // TODO: clean up derived values
         const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
-        
-        for (let i = 0; i < coords.length - 1; i++) {
-            const x1 = coords[i][0];
-            const y1 = coords[i][1];
-            const x2 = coords[i + 1][0];
-            const y2 = coords[i + 1][1];
-            
-            DrawUtil.drawLine(this.CTX, x1, y1, x2, y2);
+
+        for (const node of nodes) {
+            const path2d = this.hexPaths2D[node.x][node.y];
+            this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
+            this.CTX.fill(path2d);
         }
     }
 
@@ -207,32 +243,53 @@ export class Display {
                     const path = this.hexPaths2D[i][j];
                     if (this.CTX.isPointInPath(path, x, y) 
                             && this.game.getToken(i, j) === Token.EMPTY) {
+                        this.activeHoverNode = null;
                         controller.applyMove(i, j);
+                        return;
                     }
                 }
             }
         });
 
-        this.CANVAS.addEventListener("mouseover", (event) => {
+        // TODO: wrong hover color when playing AI after turn change
+        this.CANVAS.addEventListener("mousemove", (event) => {
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
 
             const tokenToPlace = this.game.getCurrentPlayer();
-            if (tokenToPlace === Token.RED) {
-                this.CTX.fillStyle = Display.RED_HOVER_COLOR;
-            } else {
-                this.CTX.fillStyle = Display.BLUE_HOVER_COLOR;
-            }
+            const color = tokenToPlace === 
+                Token.RED ? Display.RED_HOVER_COLOR : Display.BLUE_HOVER_COLOR;
 
-            for (let i = 0; i < 6; i++) {
-                for (let j = 0; j < 6; j++) {
+            const oldHoverNode = this.activeHoverNode;
+            for (let i = 0; i < this.sideCount; i++) {
+                for (let j = 0; j < this.sideCount; j++) {
                     const path = this.hexPaths2D[i][j];
 
                     if (this.CTX.isPointInPath(path, x, y) 
                             && this.game.getToken(i, j) === Token.EMPTY) {
-                        this.CTX.fill(path);
+                        if (path === this.activeHoverNode) {
+                            this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
+                            this.CTX.fill(path);
+                            this.CTX.fillStyle = color;
+                            this.CTX.fill(path);
+                        } else {
+                            if (this.activeHoverNode !== null) {
+                                this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
+                                this.CTX.stroke(this.activeHoverNode);
+                                this.CTX.fill(this.activeHoverNode);
+                            }
+                            this.CTX.fill(path);
+                            this.activeHoverNode = path;
+                        }
+                        return;
                     }
                 }
+            }
+            if (this.activeHoverNode !== null) {
+                this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
+                this.CTX.stroke(this.activeHoverNode);
+                this.CTX.fill(this.activeHoverNode);
+                this.activeHoverNode = null;
             }
         });
 
