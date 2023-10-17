@@ -26,7 +26,6 @@ newGameButton.onclick = () => {
     display.addInputHandling(new LocalGameController(display));
 };
 
-
 const newGameAIButton = document.createElement("button");
 newGameAIButton.textContent = "AI Game";
 newGameAIButton.id = "new-game-ai-button";
@@ -36,11 +35,30 @@ newGameAIButton.onclick = () => {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new Game(11);
-    console.log(game.board);
     display = new Display(4, game);
-    console.log(display.game.board);
     display.draw();
-    display.addInputHandling(new AIGameController(display));
+    const controller = new AIGameController(display);
+
+    const selectedRadioButton: HTMLInputElement = document.querySelector('input[name="player-start-color"]:checked');
+    switch (selectedRadioButton.value) {
+        case "player-red":
+            // do nothing
+            break;
+        case "player-blue":
+            console.log("ai is red");
+            controller.aiMove();
+            break;
+        case "player-random-color":
+            console.log("random");
+            if (Math.random() < 0.5) {
+                controller.aiMove();
+            }
+            break;
+        default:
+            throw new Error("Unexpected value.");
+    }
+
+    display.addInputHandling(controller);
 }
 
 // start game

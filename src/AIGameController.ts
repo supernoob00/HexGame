@@ -34,7 +34,7 @@ export class AIGameController implements Controller {
         }
     }
 
-    private aiMove(): void {
+    aiMove(): void {
         const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
         this.placeToken(bestMove.x, bestMove.y);
 

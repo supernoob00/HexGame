@@ -605,11 +605,24 @@ newGameAIButton.onclick = ()=>{
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new (0, _game.Game)(11);
-    console.log(game.board);
     display = new (0, _display.Display)(4, game);
-    console.log(display.game.board);
     display.draw();
-    display.addInputHandling(new (0, _aigameController.AIGameController)(display));
+    const controller = new (0, _aigameController.AIGameController)(display);
+    const selectedRadioButton = document.querySelector('input[name="player-start-color"]:checked');
+    switch(selectedRadioButton.value){
+        case "player-red":
+            break;
+        case "player-blue":
+            console.log("ai is red");
+            controller.aiMove();
+            break;
+        case "player-random-color":
+            if (Math.random() < 0.5) controller.aiMove;
+            break;
+        default:
+            throw new Error("Unexpected value.");
+    }
+    display.addInputHandling(controller);
 };
 // start game
 let game = new (0, _game.Game)(11);
