@@ -8,6 +8,7 @@ import { Deque } from "./Deque";
  * tiles (nodes) containing player tokens. 
  */
 export class Board {
+    public static readonly Board11x11 = new Board(11);
     /**
      * Returns the neighbors of a node at a given [x, y] position; excludes virtual nodes.
      * 

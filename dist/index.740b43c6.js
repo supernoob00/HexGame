@@ -585,10 +585,7 @@ let CANVAS = document.getElementById("game-canvas");
 // CANVAS.height = 600;
 // document.body.appendChild(CANVAS);
 // create non-board UI elements
-const newGameButton = document.createElement("button");
-newGameButton.textContent = "New Game";
-newGameButton.id = "new-game-button";
-document.body.appendChild(newGameButton);
+const newGameButton = document.getElementById("new-game-button");
 newGameButton.onclick = ()=>{
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
@@ -597,10 +594,7 @@ newGameButton.onclick = ()=>{
     display.draw();
     display.addInputHandling(new (0, _localGameController.LocalGameController)(display));
 };
-const newGameAIButton = document.createElement("button");
-newGameAIButton.textContent = "AI Game";
-newGameAIButton.id = "new-game-ai-button";
-document.body.appendChild(newGameAIButton);
+const newGameAIButton = document.getElementById("new-game-ai-button");
 newGameAIButton.onclick = ()=>{
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
@@ -617,7 +611,9 @@ newGameAIButton.onclick = ()=>{
             controller.aiMove();
             break;
         case "player-random-color":
-            if (Math.random() < 0.5) controller.aiMove;
+            console.log("random");
+            if (Math.random() < 0.5) // TODO: add timeout
+            controller.aiMove();
             break;
         default:
             throw new Error("Unexpected value.");
@@ -657,16 +653,14 @@ class Display {
         this.hexPaths2D = this.createHexPaths2D(_a.GRID_ORIGIN_X, _a.GRID_ORIGIN_Y);
         this.inputActive = true;
         this.activeHoverNode = null;
+        this.CTX.fillStyle = _a.BOARD_COLOR;
+        this.CTX.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
     }
     /**
      * Draws a grid of hexagons to the canvas.
      */ drawHexagons() {
-        this.CTX.strokeStyle = "black";
         this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
-        for (const row of this.hexPaths2D)for (const path of row){
-            this.CTX.stroke(path);
-            this.CTX.fill(path);
-        }
+        for (const row of this.hexPaths2D)for (const path of row)this.CTX.fill(path);
     }
     drawBorder() {
         // draw red border
@@ -817,7 +811,6 @@ class Display {
                     } else {
                         if (this.activeHoverNode !== null) {
                             this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
-                            this.CTX.stroke(this.activeHoverNode);
                             this.CTX.fill(this.activeHoverNode);
                         }
                         this.CTX.fill(path);
@@ -828,7 +821,6 @@ class Display {
             }
             if (this.activeHoverNode !== null) {
                 this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
-                this.CTX.stroke(this.activeHoverNode);
                 this.CTX.fill(this.activeHoverNode);
                 this.activeHoverNode = null;
             }
@@ -845,12 +837,13 @@ class Display {
 }
 _a = Display;
 // border widths around game board
-Display.CANVAS_HRZ_BORDER = 60;
+Display.CANVAS_HRZ_BORDER = 70;
 Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;
 Display.HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
 Display.FONT = "bold 16px sans-serif";
-Display.FONT_COLOR = "black";
+Display.FONT_COLOR = "white";
+Display.BOARD_COLOR = "#46424f";
 Display.RED_COLOR_VALUE = "red";
 Display.BLUE_COLOR_VALUE = "blue";
 Display.RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";
@@ -1241,6 +1234,7 @@ class Board {
         return rightNodes;
     }
 }
+Board.Board11x11 = new Board(11);
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./Token":"dekBv","./HexNode":"hlSwJ","./Deque":"4ybuc"}],"hlSwJ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -1371,14 +1365,13 @@ class AIGameController {
         else {
             this.game.switchPlayer();
             if (this.firstMovePlayed) setTimeout(this.aiMove.bind(this), 200);
-            else {
-                this.firstMovePlayed = true;
-                setTimeout(this.aiRandomMove.bind(this), 200);
-            }
+            else setTimeout(this.aiRandomMove.bind(this), 200);
         }
     }
     aiMove() {
-        const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        let bestMove;
+        if (this.firstMovePlayed) bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        else if (this.game.getCurrentPlayer() === (0, _token.Token).RED) bestMove = this.evaluator.chooseOpeningRedMove();
         this.placeToken(bestMove.x, bestMove.y);
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
             console.log("AI wins!");
@@ -1400,6 +1393,7 @@ class AIGameController {
         } else this.game.switchPlayer();
     }
     placeToken(x, y) {
+        this.firstMovePlayed = true;
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
         this.game.placeToken(x, y);
     }
@@ -1419,6 +1413,7 @@ class AIGameController {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "GameEvaluator", ()=>GameEvaluator);
+var _board = require("./Board");
 var _token = require("./Token");
 class GameEvaluator {
     constructor(board, searchDepth){
@@ -1428,6 +1423,10 @@ class GameEvaluator {
     chooseBestMove(tokenToPlace) {
         if (tokenToPlace === (0, _token.Token).RED) return this.chooseBestMoveAsMaximizer();
         return this.chooseBestMoveAsMinimizer();
+    }
+    chooseOpeningRedMove() {
+        const rand = Math.floor(Math.random() * GameEvaluator.openingMoves.length);
+        return GameEvaluator.openingMoves[rand];
     }
     chooseBestMoveAsMaximizer() {
         let max = GameEvaluator.MINIMAX_MIN_VAL - 1;
@@ -1498,8 +1497,29 @@ GameEvaluator.MINIMAX_MAX_VAL = 1000;
 GameEvaluator.MINIMAX_MIN_VAL = -1000;
 GameEvaluator.MAXIMIZER_TOKEN = (0, _token.Token).RED;
 GameEvaluator.MINIMIZER_TOKEN = (0, _token.Token).BLUE;
+GameEvaluator.openingMoves = [
+    (0, _board.Board).Board11x11.getNode(1, 2),
+    (0, _board.Board).Board11x11.getNode(3, 0),
+    (0, _board.Board).Board11x11.getNode(5, 0),
+    (0, _board.Board).Board11x11.getNode(6, 0),
+    (0, _board.Board).Board11x11.getNode(7, 0),
+    (0, _board.Board).Board11x11.getNode(8, 0),
+    (0, _board.Board).Board11x11.getNode(9, 0),
+    (0, _board.Board).Board11x11.getNode(10, 0),
+    (0, _board.Board).Board11x11.getNode(2, 5),
+    (0, _board.Board).Board11x11.getNode(9, 2),
+    (0, _board.Board).Board11x11.getNode(8, 5),
+    (0, _board.Board).Board11x11.getNode(1, 8),
+    (0, _board.Board).Board11x11.getNode(0, 10),
+    (0, _board.Board).Board11x11.getNode(2, 10),
+    (0, _board.Board).Board11x11.getNode(3, 10),
+    (0, _board.Board).Board11x11.getNode(5, 10),
+    (0, _board.Board).Board11x11.getNode(6, 10),
+    (0, _board.Board).Board11x11.getNode(7, 10),
+    (0, _board.Board).Board11x11.getNode(8, 10)
+];
 
-},{"./Token":"dekBv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aY4Fa":[function(require,module,exports) {
+},{"./Token":"dekBv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./Board":"8Raam"}],"aY4Fa":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "LocalGameController", ()=>LocalGameController);
@@ -1507,13 +1527,14 @@ class LocalGameController {
     constructor(display){
         this.display = display;
         this.game = display.game;
+        this.firstPlayerMoved = false;
     }
     applyMove(x, y) {
         const currentPlayer = this.game.getCurrentPlayer();
         this.display.fillHexagon(x, y, currentPlayer);
         this.game.placeToken(x, y);
         if (this.game.isWinner(currentPlayer)) {
-            console.log("winner!");
+            console.log("Winner!");
             this.game.setWinner(currentPlayer);
             this.display.disableInput();
             const winBridge = this.game.getWinBridge();

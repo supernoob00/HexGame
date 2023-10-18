@@ -12,10 +12,7 @@ let CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
 // document.body.appendChild(CANVAS);
 
 // create non-board UI elements
-const newGameButton = document.createElement("button");
-newGameButton.textContent = "New Game";
-newGameButton.id = "new-game-button";
-document.body.appendChild(newGameButton);
+const newGameButton = document.getElementById("new-game-button");
 
 newGameButton.onclick = () => {
     display.clearDisplay();
@@ -26,10 +23,7 @@ newGameButton.onclick = () => {
     display.addInputHandling(new LocalGameController(display));
 };
 
-const newGameAIButton = document.createElement("button");
-newGameAIButton.textContent = "AI Game";
-newGameAIButton.id = "new-game-ai-button";
-document.body.appendChild(newGameAIButton);
+const newGameAIButton = document.getElementById("new-game-ai-button");
 
 newGameAIButton.onclick = () => {
     display.clearDisplay();
@@ -51,6 +45,7 @@ newGameAIButton.onclick = () => {
         case "player-random-color":
             console.log("random");
             if (Math.random() < 0.5) {
+                // TODO: add timeout
                 controller.aiMove();
             }
             break;

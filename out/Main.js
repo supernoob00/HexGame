@@ -9,10 +9,7 @@ let CANVAS = document.getElementById("game-canvas");
 // CANVAS.height = 600;
 // document.body.appendChild(CANVAS);
 // create non-board UI elements
-const newGameButton = document.createElement("button");
-newGameButton.textContent = "New Game";
-newGameButton.id = "new-game-button";
-document.body.appendChild(newGameButton);
+const newGameButton = document.getElementById("new-game-button");
 newGameButton.onclick = () => {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
@@ -21,10 +18,7 @@ newGameButton.onclick = () => {
     display.draw();
     display.addInputHandling(new LocalGameController(display));
 };
-const newGameAIButton = document.createElement("button");
-newGameAIButton.textContent = "AI Game";
-newGameAIButton.id = "new-game-ai-button";
-document.body.appendChild(newGameAIButton);
+const newGameAIButton = document.getElementById("new-game-ai-button");
 newGameAIButton.onclick = () => {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
@@ -44,7 +38,8 @@ newGameAIButton.onclick = () => {
         case "player-random-color":
             console.log("random");
             if (Math.random() < 0.5) {
-                controller.aiMove;
+                // TODO: add timeout
+                controller.aiMove();
             }
             break;
         default:

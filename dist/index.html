@@ -9,24 +9,29 @@
     <link rel="stylesheet" href="/index.3a01df49.css">
 </head>
 <body>
-    <canvas id="game-canvas" width="800" height="500"></canvas>
+    <div class="game">
+        <canvas id="game-canvas" width="800" height="500"></canvas>
 
-    <fieldset>
-        <legend></legend>
-        <div>
-          <input type="radio" id="player-red" name="player-start-color" value="player-red" checked="">
-          <label for="player-red">Play as Red</label>
+        <div class="start-game-buttons">
+            <button id="new-game-button">Local 2-Player</button>
+            <button id="new-game-ai-button">Play with AI</button>
+            <div class="ai-game-options">
+                <div>
+                    <input type="radio" id="player-red" name="player-start-color" value="player-red" checked="">
+                    <label for="player-red">Play as Red</label>
+                </div>
+                
+                <div>
+                    <input type="radio" id="player-blue" name="player-start-color" value="player-blue">
+                    <label for="player-blue">Play as Blue</label>
+                </div>
+                
+                <div>
+                    <input type="radio" id="player-random-color" name="player-start-color" value="player-random-color">
+                    <label for="player-random-color">Random Color</label>
+                </div>
+            </div>
         </div>
-      
-        <div>
-          <input type="radio" id="player-blue" name="player-start-color" value="player-blue">
-          <label for="player-blue">Play as Blue</label>
-        </div>
-      
-        <div>
-          <input type="radio" id="player-random-color" name="player-start-color" value="player-random-color">
-          <label for="player-random-color">Random Color</label>
-        </div>
-      </fieldset>      
+    </div>    
 </body>
 </html>

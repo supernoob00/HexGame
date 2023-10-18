@@ -311,4 +311,5 @@ export class Board {
         return rightNodes;
     }
 }
+Board.Board11x11 = new Board(11);
 //# sourceMappingURL=Board.js.map

@@ -1,3 +1,4 @@
+import { Board } from "./Board";
 import { Token } from "./Token";
 export class GameEvaluator {
     constructor(board, searchDepth) {
@@ -9,6 +10,10 @@ export class GameEvaluator {
             return this.chooseBestMoveAsMaximizer();
         }
         return this.chooseBestMoveAsMinimizer();
+    }
+    chooseOpeningRedMove() {
+        const rand = Math.floor(Math.random() * GameEvaluator.openingMoves.length);
+        return GameEvaluator.openingMoves[rand];
     }
     chooseBestMoveAsMaximizer() {
         let max = GameEvaluator.MINIMAX_MIN_VAL - 1;
@@ -98,4 +103,25 @@ GameEvaluator.MINIMAX_MAX_VAL = 1000;
 GameEvaluator.MINIMAX_MIN_VAL = -1000;
 GameEvaluator.MAXIMIZER_TOKEN = Token.RED;
 GameEvaluator.MINIMIZER_TOKEN = Token.BLUE;
+GameEvaluator.openingMoves = [
+    Board.Board11x11.getNode(1, 2),
+    Board.Board11x11.getNode(3, 0),
+    Board.Board11x11.getNode(5, 0),
+    Board.Board11x11.getNode(6, 0),
+    Board.Board11x11.getNode(7, 0),
+    Board.Board11x11.getNode(8, 0),
+    Board.Board11x11.getNode(9, 0),
+    Board.Board11x11.getNode(10, 0),
+    Board.Board11x11.getNode(2, 5),
+    Board.Board11x11.getNode(9, 2),
+    Board.Board11x11.getNode(8, 5),
+    Board.Board11x11.getNode(1, 8),
+    Board.Board11x11.getNode(0, 10),
+    Board.Board11x11.getNode(2, 10),
+    Board.Board11x11.getNode(3, 10),
+    Board.Board11x11.getNode(5, 10),
+    Board.Board11x11.getNode(6, 10),
+    Board.Board11x11.getNode(7, 10),
+    Board.Board11x11.getNode(8, 10)
+];
 //# sourceMappingURL=GameEvaluator.js.map

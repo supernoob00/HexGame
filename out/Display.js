@@ -19,16 +19,16 @@ export class Display {
         this.hexPaths2D = this.createHexPaths2D(_a.GRID_ORIGIN_X, _a.GRID_ORIGIN_Y);
         this.inputActive = true;
         this.activeHoverNode = null;
+        this.CTX.fillStyle = _a.BOARD_COLOR;
+        this.CTX.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
     }
     /**
      * Draws a grid of hexagons to the canvas.
      */
     drawHexagons() {
-        this.CTX.strokeStyle = "black";
         this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
         for (const row of this.hexPaths2D) {
             for (const path of row) {
-                this.CTX.stroke(path);
                 this.CTX.fill(path);
             }
         }
@@ -191,7 +191,6 @@ export class Display {
                         else {
                             if (this.activeHoverNode !== null) {
                                 this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
-                                this.CTX.stroke(this.activeHoverNode);
                                 this.CTX.fill(this.activeHoverNode);
                             }
                             this.CTX.fill(path);
@@ -203,7 +202,6 @@ export class Display {
             }
             if (this.activeHoverNode !== null) {
                 this.CTX.fillStyle = _a.EMPTY_TILE_COLOR;
-                this.CTX.stroke(this.activeHoverNode);
                 this.CTX.fill(this.activeHoverNode);
                 this.activeHoverNode = null;
             }
@@ -220,12 +218,13 @@ export class Display {
 }
 _a = Display;
 // border widths around game board
-Display.CANVAS_HRZ_BORDER = 60;
+Display.CANVAS_HRZ_BORDER = 70;
 Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;
 Display.HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
 Display.FONT = "bold 16px sans-serif";
-Display.FONT_COLOR = "black";
+Display.FONT_COLOR = "white";
+Display.BOARD_COLOR = "#46424f";
 Display.RED_COLOR_VALUE = "red";
 Display.BLUE_COLOR_VALUE = "blue";
 Display.RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";

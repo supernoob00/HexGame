@@ -20,6 +20,7 @@ export class AIGameController implements Controller {
 
     applyMove(x: number, y: number) {
         this.placeToken(x, y);
+
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
             this.setWinner();
         } else {
@@ -28,14 +29,19 @@ export class AIGameController implements Controller {
             if (this.firstMovePlayed) {
                 setTimeout(this.aiMove.bind(this), 200);
             } else {
-                this.firstMovePlayed = true;
                 setTimeout(this.aiRandomMove.bind(this), 200);
             }
         }
     }
 
     aiMove(): void {
-        const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        let bestMove: HexNode;
+        if (this.firstMovePlayed) {
+            bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        } else if (this.game.getCurrentPlayer() === Token.RED) {
+            bestMove = this.evaluator.chooseOpeningRedMove();
+        }
+
         this.placeToken(bestMove.x, bestMove.y);
 
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
@@ -71,6 +77,7 @@ export class AIGameController implements Controller {
     }
 
     private placeToken(x: number, y: number) {
+        this.firstMovePlayed = true;
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
         this.game.placeToken(x, y);
     }

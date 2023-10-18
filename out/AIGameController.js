@@ -18,13 +18,18 @@ export class AIGameController {
                 setTimeout(this.aiMove.bind(this), 200);
             }
             else {
-                this.firstMovePlayed = true;
                 setTimeout(this.aiRandomMove.bind(this), 200);
             }
         }
     }
     aiMove() {
-        const bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        let bestMove;
+        if (this.firstMovePlayed) {
+            bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
+        }
+        else if (this.game.getCurrentPlayer() === Token.RED) {
+            bestMove = this.evaluator.chooseOpeningRedMove();
+        }
         this.placeToken(bestMove.x, bestMove.y);
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
             console.log("AI wins!");
@@ -58,6 +63,7 @@ export class AIGameController {
         }
     }
     placeToken(x, y) {
+        this.firstMovePlayed = true;
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
         this.game.placeToken(x, y);
     }

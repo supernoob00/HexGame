@@ -15,15 +15,16 @@ export class Display {
     readonly CANVAS_ORIGIN_Y = this.CANVAS.offsetTop + this.CANVAS.clientTop;
 
     // border widths around game board
-    static readonly CANVAS_HRZ_BORDER = 60;
+    static readonly CANVAS_HRZ_BORDER = 70;
     static readonly CANVAS_VERT_BORDER = 50;
 
     static readonly HEXAGON_SIDE_COUNT = 6;
     static readonly HEXAGON_INTERIOR_ANGLE = Math.PI / 3;
 
     static readonly FONT = "bold 16px sans-serif";
-    static readonly FONT_COLOR = "black";
+    static readonly FONT_COLOR = "white";
 
+    static readonly BOARD_COLOR = "#46424f";
     static readonly RED_COLOR_VALUE = "red";
     static readonly BLUE_COLOR_VALUE = "blue";
     static readonly RED_HOVER_COLOR = "rgba(200, 0, 0, 0.3)";
@@ -70,17 +71,18 @@ export class Display {
         this.hexPaths2D = this.createHexPaths2D(Display.GRID_ORIGIN_X, Display.GRID_ORIGIN_Y);
         this.inputActive = true;
         this.activeHoverNode = null;
+
+        this.CTX.fillStyle = Display.BOARD_COLOR;
+        this.CTX.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
     }
 
     /**
      * Draws a grid of hexagons to the canvas.
      */
     private drawHexagons(): void {
-        this.CTX.strokeStyle = "black";
         this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
         for (const row of this.hexPaths2D) {
             for (const path of row) {
-                this.CTX.stroke(path);
                 this.CTX.fill(path);
             }
         }
@@ -275,7 +277,6 @@ export class Display {
                         } else {
                             if (this.activeHoverNode !== null) {
                                 this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
-                                this.CTX.stroke(this.activeHoverNode);
                                 this.CTX.fill(this.activeHoverNode);
                             }
                             this.CTX.fill(path);
@@ -287,7 +288,6 @@ export class Display {
             }
             if (this.activeHoverNode !== null) {
                 this.CTX.fillStyle = Display.EMPTY_TILE_COLOR;
-                this.CTX.stroke(this.activeHoverNode);
                 this.CTX.fill(this.activeHoverNode);
                 this.activeHoverNode = null;
             }
