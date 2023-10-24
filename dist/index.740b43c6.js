@@ -578,24 +578,17 @@ var _aigameController = require("./AIGameController");
 var _display = require("./Display");
 var _game = require("./Game");
 var _localGameController = require("./LocalGameController");
-// create canvas element
-let CANVAS = document.getElementById("game-canvas");
-// CANVAS.id = "game-canvas";
-// CANVAS.width = 600;
-// CANVAS.height = 600;
-// document.body.appendChild(CANVAS);
-// create non-board UI elements
-const newGameButton = document.getElementById("new-game-button");
-newGameButton.onclick = ()=>{
+let game = new (0, _game.Game)(11);
+let display = new (0, _display.Display)(4, game);
+function startTwoPlayerGame() {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new (0, _game.Game)(11);
     display = new (0, _display.Display)(4, game);
     display.draw();
     display.addInputHandling(new (0, _localGameController.LocalGameController)(display));
-};
-const newGameAIButton = document.getElementById("new-game-ai-button");
-newGameAIButton.onclick = ()=>{
+}
+function startAIGame() {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new (0, _game.Game)(11);
@@ -607,26 +600,24 @@ newGameAIButton.onclick = ()=>{
         case "player-red":
             break;
         case "player-blue":
-            console.log("ai is red");
-            controller.aiMove();
+            setTimeout(controller.aiMove.bind(controller), 500);
             break;
         case "player-random-color":
-            console.log("random");
-            if (Math.random() < 0.5) // TODO: add timeout
-            controller.aiMove();
+            if (Math.random() < 0.5) setTimeout(controller.aiMove.bind(controller), 500);
             break;
         default:
             throw new Error("Unexpected value.");
     }
     display.addInputHandling(controller);
-};
+}
+// event handler for new game button
+const newGameButton = document.getElementById("new-game-button");
+newGameButton.onclick = startTwoPlayerGame;
+// event handler for new game with AI button
+const newGameAIButton = document.getElementById("new-game-ai-button");
+newGameAIButton.onclick = startAIGame;
 // start game
-let game = new (0, _game.Game)(11);
-let display = new (0, _display.Display)(4, game);
-let handler = new (0, _localGameController.LocalGameController)(display);
-display.draw();
-display.addInputHandling(handler);
-console.log(game.board.nodes);
+startTwoPlayerGame();
 
 },{"./Display":"8PhuN","./Game":"jePnd","./AIGameController":"aSLr4","./LocalGameController":"aY4Fa"}],"8PhuN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -712,17 +703,24 @@ class Display {
         else this.CTX.fillStyle = _a.BLUE_COLOR_VALUE;
         this.CTX.fill(path2D);
     }
-    drawTrail(nodes) {
+    highlightWinPath(nodes) {
         this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
-        const r = 1;
-        // TODO: clean up derived values
-        const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
+        let i = 1;
         for (const node of nodes){
             const path2d = this.hexPaths2D[node.x][node.y];
-            this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
-            this.CTX.fill(path2d);
+            setInterval(()=>this.CTX.fill(path2d), i * 250);
+            i++;
         }
     }
+    drawHourglass() {
+        const img = new Image();
+        console.log(img);
+        img.onload = (()=>{
+            this.CTX.drawImage(img, 50, 50);
+        }).bind(this);
+        img.src = "./hourglass-svgrepo-com.png";
+    }
+    clearHourglass() {}
     /**
      * Creates a hexagon Path2D object with the given location and size.
      *
@@ -775,10 +773,7 @@ class Display {
     enableInput() {
         this.inputActive = true;
     }
-    /**
-     * Adds input handling to this.
-     * @param controller
-     */ addInputHandling(controller) {
+    addInputHandling(controller) {
         // add click events to tiles
         this.CANVAS.addEventListener("click", (event)=>{
             if (!this.inputActive) return;
@@ -795,6 +790,7 @@ class Display {
         });
         // TODO: wrong hover color when playing AI after turn change
         this.CANVAS.addEventListener("mousemove", (event)=>{
+            if (!this.inputActive) return;
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
             const tokenToPlace = this.game.getCurrentPlayer();
@@ -836,7 +832,6 @@ class Display {
     }
 }
 _a = Display;
-// border widths around game board
 Display.CANVAS_HRZ_BORDER = 70;
 Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;
@@ -1361,7 +1356,7 @@ class AIGameController {
     }
     applyMove(x, y) {
         this.placeToken(x, y);
-        if (this.game.isWinner(this.game.getCurrentPlayer())) this.setWinner();
+        if (this.game.isWinner(this.game.getCurrentPlayer())) this.makeWinner(this.game.getCurrentPlayer());
         else {
             this.game.switchPlayer();
             if (this.firstMovePlayed) setTimeout(this.aiMove.bind(this), 200);
@@ -1369,43 +1364,35 @@ class AIGameController {
         }
     }
     aiMove() {
+        this.display.drawHourglass();
         let bestMove;
         if (this.firstMovePlayed) bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
         else if (this.game.getCurrentPlayer() === (0, _token.Token).RED) bestMove = this.evaluator.chooseOpeningRedMove();
         this.placeToken(bestMove.x, bestMove.y);
-        if (this.game.isWinner(this.game.getCurrentPlayer())) {
-            console.log("AI wins!");
-            this.setWinner();
-        } else this.game.switchPlayer();
+        this.display.clearHourglass();
+        if (this.game.isWinner(this.game.getCurrentPlayer())) this.makeWinner(this.game.getCurrentPlayer());
+        else this.game.switchPlayer();
     }
     aiRandomMove() {
-        console.log("called");
         let availableMoves = [];
         for (const node of this.game.board.playableNodes())if (node.getToken() === (0, _token.Token).EMPTY) availableMoves.push(node);
         if (availableMoves.length === 0) throw Error("No available moves");
         const random = Math.floor(Math.random() * availableMoves.length);
         const randomMove = availableMoves[random];
-        console.log(randomMove);
         this.placeToken(randomMove.x, randomMove.y);
-        if (this.game.isWinner(this.game.getCurrentPlayer())) {
-            console.log("AI wins!");
-            this.setWinner();
-        } else this.game.switchPlayer();
+        if (this.game.isWinner(this.game.getCurrentPlayer())) this.makeWinner(this.game.getCurrentPlayer());
+        else this.game.switchPlayer();
     }
     placeToken(x, y) {
         this.firstMovePlayed = true;
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
         this.game.placeToken(x, y);
     }
-    setWinner() {
-        console.log("winner!");
-        this.game.setWinner(this.game.getCurrentPlayer());
+    makeWinner(currentPlayer) {
+        this.game.setWinner(currentPlayer);
         this.display.disableInput();
         const winBridge = this.game.getWinBridge();
-        //this.display.drawTrail(
-        //    winBridge.map(node => [node.x, node.y]).slice(1, -1));
-        console.log(winBridge);
-        console.log(this.game.getWinner() + " won!");
+        this.display.highlightWinPath(winBridge);
     }
 }
 
@@ -1533,14 +1520,14 @@ class LocalGameController {
         const currentPlayer = this.game.getCurrentPlayer();
         this.display.fillHexagon(x, y, currentPlayer);
         this.game.placeToken(x, y);
-        if (this.game.isWinner(currentPlayer)) {
-            console.log("Winner!");
-            this.game.setWinner(currentPlayer);
-            this.display.disableInput();
-            const winBridge = this.game.getWinBridge();
-            this.display.drawTrail(winBridge);
-            console.log(this.game.getWinner() + " won!");
-        } else this.game.switchPlayer();
+        if (this.game.isWinner(currentPlayer)) this.makeWinner(currentPlayer);
+        else this.game.switchPlayer();
+    }
+    makeWinner(currentPlayer) {
+        this.game.setWinner(currentPlayer);
+        this.display.disableInput();
+        const winBridge = this.game.getWinBridge();
+        this.display.highlightWinPath(winBridge);
     }
 }
 

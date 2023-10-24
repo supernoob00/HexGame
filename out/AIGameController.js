@@ -10,7 +10,7 @@ export class AIGameController {
     applyMove(x, y) {
         this.placeToken(x, y);
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
-            this.setWinner();
+            this.makeWinner(this.game.getCurrentPlayer());
         }
         else {
             this.game.switchPlayer();
@@ -23,6 +23,7 @@ export class AIGameController {
         }
     }
     aiMove() {
+        this.display.drawHourglass();
         let bestMove;
         if (this.firstMovePlayed) {
             bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
@@ -31,16 +32,15 @@ export class AIGameController {
             bestMove = this.evaluator.chooseOpeningRedMove();
         }
         this.placeToken(bestMove.x, bestMove.y);
+        this.display.clearHourglass();
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
-            console.log("AI wins!");
-            this.setWinner();
+            this.makeWinner(this.game.getCurrentPlayer());
         }
         else {
             this.game.switchPlayer();
         }
     }
     aiRandomMove() {
-        console.log("called");
         let availableMoves = [];
         for (const node of this.game.board.playableNodes()) {
             if (node.getToken() === Token.EMPTY) {
@@ -52,11 +52,9 @@ export class AIGameController {
         }
         const random = Math.floor(Math.random() * availableMoves.length);
         const randomMove = availableMoves[random];
-        console.log(randomMove);
         this.placeToken(randomMove.x, randomMove.y);
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
-            console.log("AI wins!");
-            this.setWinner();
+            this.makeWinner(this.game.getCurrentPlayer());
         }
         else {
             this.game.switchPlayer();
@@ -67,15 +65,11 @@ export class AIGameController {
         this.display.fillHexagon(x, y, this.game.getCurrentPlayer());
         this.game.placeToken(x, y);
     }
-    setWinner() {
-        console.log("winner!");
-        this.game.setWinner(this.game.getCurrentPlayer());
+    makeWinner(currentPlayer) {
+        this.game.setWinner(currentPlayer);
         this.display.disableInput();
         const winBridge = this.game.getWinBridge();
-        //this.display.drawTrail(
-        //    winBridge.map(node => [node.x, node.y]).slice(1, -1));
-        console.log(winBridge);
-        console.log(this.game.getWinner() + " won!");
+        this.display.highlightWinPath(winBridge);
     }
 }
 //# sourceMappingURL=AIGameController.js.map

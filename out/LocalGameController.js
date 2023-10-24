@@ -9,16 +9,17 @@ export class LocalGameController {
         this.display.fillHexagon(x, y, currentPlayer);
         this.game.placeToken(x, y);
         if (this.game.isWinner(currentPlayer)) {
-            console.log("Winner!");
-            this.game.setWinner(currentPlayer);
-            this.display.disableInput();
-            const winBridge = this.game.getWinBridge();
-            this.display.drawTrail(winBridge);
-            console.log(this.game.getWinner() + " won!");
+            this.makeWinner(currentPlayer);
         }
         else {
             this.game.switchPlayer();
         }
+    }
+    makeWinner(currentPlayer) {
+        this.game.setWinner(currentPlayer);
+        this.display.disableInput();
+        const winBridge = this.game.getWinBridge();
+        this.display.highlightWinPath(winBridge);
     }
 }
 //# sourceMappingURL=LocalGameController.js.map

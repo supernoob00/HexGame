@@ -27,7 +27,14 @@ body {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    gap: 24px;
+    gap: 36px;
+}
+
+.start-ai-game-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 /* Button design from CSS Scan */
@@ -56,7 +63,7 @@ button {
 .ai-game-options {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     font-family: Inter,Helvetica,"Apple Color Emoji","Segoe UI Emoji",NotoColorEmoji,"Noto Color Emoji","Segoe UI Symbol","Android Emoji",EmojiSymbols,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",sans-serif;
     color: white;
 }

@@ -1,6 +1,7 @@
 import { Controller } from "./Controller";
 import { Display } from "./Display";
 import { Game } from "./Game";
+import { Token } from "./Token";
 
 export class LocalGameController implements Controller {
     private display: Display;
@@ -19,14 +20,16 @@ export class LocalGameController implements Controller {
         this.game.placeToken(x, y);
 
         if (this.game.isWinner(currentPlayer)) {
-            console.log("Winner!");
-            this.game.setWinner(currentPlayer);
-            this.display.disableInput();
-            const winBridge = this.game.getWinBridge();
-            this.display.drawTrail(winBridge);
-            console.log(this.game.getWinner() + " won!");
+            this.makeWinner(currentPlayer);
         } else {
             this.game.switchPlayer();
         }
+    }
+
+    makeWinner(currentPlayer: Token.RED | Token.BLUE): void {
+            this.game.setWinner(currentPlayer);
+            this.display.disableInput();
+            const winBridge = this.game.getWinBridge();
+            this.display.highlightWinPath(winBridge);
     }
 }

@@ -1,8 +1,5 @@
-import { MinPriorityQueue } from "../node_modules/@datastructures-js/priority-queue/index";
 import { Board } from "./Board";
-import { Game } from "./Game";
 import { HexNode } from "./HexNode";
-import { Deque } from "./Deque";
 import { Token } from "./Token";
 import {  } from "module";
 
@@ -156,6 +153,4 @@ export class GameEvaluator {
             return best;
         }
     }
-
-    // TODO: remove console log statements
 }

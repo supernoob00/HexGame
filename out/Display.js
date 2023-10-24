@@ -78,16 +78,24 @@ export class Display {
         }
         this.CTX.fill(path2D);
     }
-    drawTrail(nodes) {
+    highlightWinPath(nodes) {
         this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
-        const r = 1;
-        // TODO: clean up derived values
-        const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
+        let i = 1;
         for (const node of nodes) {
             const path2d = this.hexPaths2D[node.x][node.y];
-            this.CTX.fillStyle = _a.TRAIL_COLOR_VALUE;
-            this.CTX.fill(path2d);
+            setInterval(() => this.CTX.fill(path2d), i * 250);
+            i++;
         }
+    }
+    drawHourglass() {
+        const img = new Image();
+        console.log(img);
+        img.onload = (() => {
+            this.CTX.drawImage(img, 50, 50);
+        }).bind(this);
+        img.src = "./hourglass-svgrepo-com.png";
+    }
+    clearHourglass() {
     }
     /**
      * Creates a hexagon Path2D object with the given location and size.
@@ -145,10 +153,6 @@ export class Display {
     enableInput() {
         this.inputActive = true;
     }
-    /**
-     * Adds input handling to this.
-     * @param controller
-     */
     addInputHandling(controller) {
         // add click events to tiles
         this.CANVAS.addEventListener("click", (event) => {
@@ -171,6 +175,9 @@ export class Display {
         });
         // TODO: wrong hover color when playing AI after turn change
         this.CANVAS.addEventListener("mousemove", (event) => {
+            if (!this.inputActive) {
+                return;
+            }
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
             const tokenToPlace = this.game.getCurrentPlayer();
@@ -217,7 +224,6 @@ export class Display {
     }
 }
 _a = Display;
-// border widths around game board
 Display.CANVAS_HRZ_BORDER = 70;
 Display.CANVAS_VERT_BORDER = 50;
 Display.HEXAGON_SIDE_COUNT = 6;

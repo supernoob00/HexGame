@@ -1,31 +1,21 @@
 import { AIGameController } from "./AIGameController";
-import { Controller } from "./Controller";
 import { Display } from "./Display";
 import { Game } from "./Game";
 import { LocalGameController } from "./LocalGameController";
 
-// create canvas element
-let CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
-// CANVAS.id = "game-canvas";
-// CANVAS.width = 600;
-// CANVAS.height = 600;
-// document.body.appendChild(CANVAS);
+let game: Game = new Game(11);
+let display: Display = new Display(4, game);
 
-// create non-board UI elements
-const newGameButton = document.getElementById("new-game-button");
-
-newGameButton.onclick = () => {
+function startTwoPlayerGame() {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new Game(11);
     display = new Display(4, game);
     display.draw();
     display.addInputHandling(new LocalGameController(display));
-};
+}
 
-const newGameAIButton = document.getElementById("new-game-ai-button");
-
-newGameAIButton.onclick = () => {
+function startAIGame() {
     display.clearDisplay();
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new Game(11);
@@ -39,27 +29,26 @@ newGameAIButton.onclick = () => {
             // do nothing
             break;
         case "player-blue":
-            console.log("ai is red");
-            controller.aiMove();
+            setTimeout(controller.aiMove.bind(controller), 500);
             break;
         case "player-random-color":
-            console.log("random");
             if (Math.random() < 0.5) {
-                // TODO: add timeout
-                controller.aiMove();
+                setTimeout(controller.aiMove.bind(controller), 500);
             }
             break;
         default:
             throw new Error("Unexpected value.");
     }
-
     display.addInputHandling(controller);
 }
 
+// event handler for new game button
+const newGameButton = document.getElementById("new-game-button");
+newGameButton.onclick = startTwoPlayerGame;
+
+// event handler for new game with AI button
+const newGameAIButton = document.getElementById("new-game-ai-button");
+newGameAIButton.onclick = startAIGame;
+
 // start game
-let game = new Game(11);
-let display = new Display(4, game);
-let handler = new LocalGameController(display);
-display.draw();
-display.addInputHandling(handler);
-console.log(game.board.nodes);
+startTwoPlayerGame();

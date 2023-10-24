@@ -2,7 +2,6 @@
 
 import { Token } from "./Token";
 import { Controller } from "./Controller";
-import { DrawUtil } from "./DrawUtil";
 import { Game } from "./Game";
 import { HexNode } from "./HexNode";
 
@@ -14,7 +13,6 @@ export class Display {
     readonly CANVAS_ORIGIN_X = this.CANVAS.offsetLeft + this.CANVAS.clientLeft;
     readonly CANVAS_ORIGIN_Y = this.CANVAS.offsetTop + this.CANVAS.clientTop;
 
-    // border widths around game board
     static readonly CANVAS_HRZ_BORDER = 70;
     static readonly CANVAS_VERT_BORDER = 50;
 
@@ -37,25 +35,18 @@ export class Display {
 
     readonly gap: number;
     readonly sideCount: number;
-
-    // computed radius of hexagon tiles from board size and gap length;
-    // found by solving the following algebraic equation for hexRadius: 
-    // CLIENT_WIDTH = hexRowLength + bottomOffset + totalGapLength
     readonly hexRadius: number;
-    // hexagon flat-to-flat distance
     readonly hexFlatToFlat: number;
     readonly bottomOffset: number;
     readonly totalGapLength: number;
 
-    // an array of Path2D hexagon objects
     private readonly hexPaths2D: Path2D[][];
 
     public inputActive: boolean;
-
     private activeHoverNode: Path2D | null;
 
     // view can access the game object to get information about it, but should not 
-    // modify it in any way -- that's the responsibility of the controller
+    // modify it in any way
     readonly game: Game;
 
     constructor(gap: number, game: Game) {
@@ -146,17 +137,28 @@ export class Display {
         this.CTX.fill(path2D);
     }
 
-    drawTrail(nodes: HexNode[]) {
+    highlightWinPath(nodes: HexNode[]): void {
         this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
-        const r = 1;
-        // TODO: clean up derived values
-        const rowOffset = this.hexFlatToFlat / 2 * Math.sqrt(3);
 
+        let i = 1;
         for (const node of nodes) {
             const path2d = this.hexPaths2D[node.x][node.y];
-            this.CTX.fillStyle = Display.TRAIL_COLOR_VALUE;
-            this.CTX.fill(path2d);
+            setInterval(() => this.CTX.fill(path2d), i * 250);
+            i++;
         }
+    }
+
+    drawHourglass(): void {
+        const img = new Image();
+        console.log(img);
+        img.onload = (() => {
+            this.CTX.drawImage(img, 50, 50);
+        }).bind(this);
+        img.src = "./hourglass-svgrepo-com.png";
+    }
+
+    clearHourglass(): void {
+
     }
 
     /**
@@ -227,10 +229,6 @@ export class Display {
         this.inputActive = true;
     }
 
-    /**
-     * Adds input handling to this.
-     * @param controller 
-     */
     addInputHandling(controller: Controller): void {
         // add click events to tiles
         this.CANVAS.addEventListener("click", (event) => {
@@ -255,6 +253,9 @@ export class Display {
 
         // TODO: wrong hover color when playing AI after turn change
         this.CANVAS.addEventListener("mousemove", (event) => {
+            if (!this.inputActive) {
+                return;
+            }
             const x = event.pageX - this.CANVAS_ORIGIN_X;
             const y = event.pageY - this.CANVAS_ORIGIN_Y;
 
