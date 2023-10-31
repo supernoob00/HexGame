@@ -148,17 +148,14 @@ export class Display {
         }
     }
 
-    drawHourglass(): void {
-        const img = new Image();
-        console.log(img);
-        img.onload = (() => {
-            this.CTX.drawImage(img, 50, 50);
-        }).bind(this);
-        img.src = "./hourglass-svgrepo-com.png";
+    showThinkingIcon(): void {
+        this.CTX.fillStyle = Display.FONT_COLOR;
+        this.CTX.fillText("thinking...", 600, 180);
     }
 
-    clearHourglass(): void {
-
+    hideThinkingIcon(): void {
+        this.CTX.fillStyle = Display.BOARD_COLOR;
+        this.CTX.fillRect(600, 10, 100, 100);
     }
 
     /**

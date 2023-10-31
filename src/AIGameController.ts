@@ -6,6 +6,8 @@ import { GameEvaluator } from "./GameEvaluator";
 import { HexNode } from "./HexNode";
 
 export class AIGameController implements Controller {
+    public static readonly RED_OPENINGS: HexNode[];
+
     private display: Display;
     private game: Game;
     private evaluator: GameEvaluator;
@@ -35,7 +37,6 @@ export class AIGameController implements Controller {
     }
 
     aiMove(): void {
-        this.display.drawHourglass();
         let bestMove: HexNode;
         if (this.firstMovePlayed) {
             bestMove = this.evaluator.chooseBestMove(this.game.getCurrentPlayer());
@@ -43,13 +44,20 @@ export class AIGameController implements Controller {
             bestMove = this.evaluator.chooseOpeningRedMove();
         }
         this.placeToken(bestMove.x, bestMove.y);
-        this.display.clearHourglass();
 
         if (this.game.isWinner(this.game.getCurrentPlayer())) {
             this.makeWinner(this.game.getCurrentPlayer());
         } else {
             this.game.switchPlayer();
         }
+    }
+
+    aiFirstRedMove(): void {
+
+    }
+
+    aiFirstBlueMove(): void {
+        const possibleMoves = OPENING
     }
 
     private aiRandomMove(): void {

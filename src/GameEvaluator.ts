@@ -47,8 +47,9 @@ export class GameEvaluator {
     }
 
     chooseOpeningRedMove(): HexNode {
-        const rand = Math.floor(Math.random() * GameEvaluator.openingMoves.length);
-        return GameEvaluator.openingMoves[rand];
+        const rand1 = Math.floor(Math.random() * 3 + 4);
+        const rand2 = Math.floor(Math.random() * 3 + 4);
+        return this.board.getNode(rand1, rand2);
     }
 
     private chooseBestMoveAsMaximizer(): HexNode {
