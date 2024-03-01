@@ -5,6 +5,7 @@ html, body {
 }
 
 body {
+  flex-direction: column;
   justify-content: center;
   display: flex;
 }
@@ -15,6 +16,18 @@ body {
   gap: 60px;
   margin: 0 auto;
   display: flex;
+}
+
+.game-area {
+  flex-direction: column;
+  align-items: center;
+  display: flex;
+}
+
+#game-info {
+  color: #fff;
+  margin: 12px;
+  font-size: 26px;
 }
 
 #game-canvas {
@@ -41,22 +54,20 @@ button {
   box-sizing: border-box;
   color: #fff;
   cursor: pointer;
-  opacity: 1;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: manipulation;
-  word-break: break-word;
   background: #5e5df0;
   border: 0;
   border-radius: 999px;
   outline: 0 solid #0000;
   min-width: 150px;
   padding: 8px 18px;
-  font-family: Inter, Helvetica, Apple Color Emoji, Segoe UI Emoji, NotoColorEmoji, Noto Color Emoji, Segoe UI Symbol, Android Emoji, EmojiSymbols, -apple-system, system-ui, Segoe UI, Roboto, Helvetica Neue, Noto Sans, sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 24px;
   box-shadow: 0 10px 20px -10px #5e5df0;
+}
+
+.button-highlight {
+  background: #5f9ea0;
 }
 
 .ai-game-options {
@@ -67,4 +78,4 @@ button {
   display: flex;
 }
 
-/*# sourceMappingURL=index.2cdaf7bc.css.map */
+/*# sourceMappingURL=index.dd371b82.css.map */

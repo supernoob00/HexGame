@@ -4,15 +4,10 @@ import { Token } from "./Token";
 import { Controller } from "./Controller";
 import { Game } from "./Game";
 import { HexNode } from "./HexNode";
+import { LocalGameController } from "./LocalGameController";
+import { AIGameController } from "./AIGameController";
 
 export class Display {
-    readonly CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
-    readonly CTX = this.CANVAS.getContext("2d");
-    readonly CANVAS_HEIGHT = this.CANVAS.clientHeight;
-    readonly CANVAS_WIDTH = this.CANVAS.clientWidth;
-    readonly CANVAS_ORIGIN_X = this.CANVAS.offsetLeft + this.CANVAS.clientLeft;
-    readonly CANVAS_ORIGIN_Y = this.CANVAS.offsetTop + this.CANVAS.clientTop;
-
     static readonly CANVAS_HRZ_BORDER = 70;
     static readonly CANVAS_VERT_BORDER = 50;
 
@@ -33,6 +28,14 @@ export class Display {
     static readonly GRID_ORIGIN_X = this.CANVAS_HRZ_BORDER;
     static readonly GRID_ORIGIN_Y = this.CANVAS_VERT_BORDER;
 
+    readonly GAME_INFO = document.getElementById("game-info");
+    readonly CANVAS = document.getElementById("game-canvas") as HTMLCanvasElement;
+    readonly CTX = this.CANVAS.getContext("2d");
+    readonly CANVAS_HEIGHT = this.CANVAS.clientHeight;
+    readonly CANVAS_WIDTH = this.CANVAS.clientWidth;
+    readonly CANVAS_ORIGIN_X = this.CANVAS.offsetLeft + this.CANVAS.clientLeft;
+    readonly CANVAS_ORIGIN_Y = this.CANVAS.offsetTop + this.CANVAS.clientTop;
+
     readonly gap: number;
     readonly sideCount: number;
     readonly hexRadius: number;
@@ -48,6 +51,7 @@ export class Display {
     // view can access the game object to get information about it, but should not 
     // modify it in any way
     readonly game: Game;
+    private controller: Controller;
 
     constructor(gap: number, game: Game) {
         this.gap = gap;
@@ -112,12 +116,21 @@ export class Display {
 
     }
 
+    private drawGameInfo(): void {
+        if (this.game.isGameOver()) {
+            this.GAME_INFO.textContent = (this.game.getWinner() === Token.RED ? "Red" : "Blue") + " won!";
+        } else {
+            this.GAME_INFO.textContent = (this.game.getCurrentPlayer() === Token.RED ? "Red" : "Blue") + " to move.";
+        }
+    }
+
     /**
      * Draws current game state to canvas.
      */
     draw(): void {
         this.drawHexagons();
         this.drawText();
+        this.drawGameInfo();
     }
 
     /**
@@ -227,6 +240,8 @@ export class Display {
     }
 
     addInputHandling(controller: Controller): void {
+        this.controller = controller;
+
         // add click events to tiles
         this.CANVAS.addEventListener("click", (event) => {
             if (!this.inputActive) {
@@ -242,6 +257,7 @@ export class Display {
                             && this.game.getToken(i, j) === Token.EMPTY) {
                         this.activeHoverNode = null;
                         controller.applyMove(i, j);
+                        this.drawGameInfo();
                         return;
                     }
                 }

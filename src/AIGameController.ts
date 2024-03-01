@@ -6,6 +6,7 @@ import { GameEvaluator } from "./GameEvaluator";
 import { HexNode } from "./HexNode";
 
 export class AIGameController implements Controller {
+    // TODO: create openings table
     public static readonly RED_OPENINGS: HexNode[];
 
     private display: Display;
@@ -50,14 +51,8 @@ export class AIGameController implements Controller {
         } else {
             this.game.switchPlayer();
         }
-    }
-
-    aiFirstRedMove(): void {
-
-    }
-
-    aiFirstBlueMove(): void {
-        const possibleMoves = OPENING
+        
+        this.display.drawGameInfo();
     }
 
     private aiRandomMove(): void {
@@ -79,6 +74,7 @@ export class AIGameController implements Controller {
         } else {
             this.game.switchPlayer();
         }
+        this.display.drawGameInfo();
     }
 
     private placeToken(x: number, y: number) {

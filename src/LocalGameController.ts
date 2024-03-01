@@ -24,6 +24,7 @@ export class LocalGameController implements Controller {
         } else {
             this.game.switchPlayer();
         }
+        this.display.drawGameInfo();
     }
 
     makeWinner(currentPlayer: Token.RED | Token.BLUE): void {
