@@ -11,6 +11,7 @@ function startTwoPlayerGame() {
     display.CANVAS.replaceWith(display.CANVAS.cloneNode(true));
     game = new Game(11);
     display = new Display(4, game);
+
     display.draw();
     display.addInputHandling(new LocalGameController(display));
 }
@@ -44,11 +45,19 @@ function startAIGame() {
 
 // event handler for new game button
 const newGameButton = document.getElementById("new-game-button");
-newGameButton.onclick = startTwoPlayerGame;
+newGameButton.onclick = () => {
+    newGameButton.classList.add("button-highlight");
+    newGameAIButton.classList.remove("button-highlight");
+    startTwoPlayerGame();
+};
 
 // event handler for new game with AI button
 const newGameAIButton = document.getElementById("new-game-ai-button");
-newGameAIButton.onclick = startAIGame;
+newGameAIButton.onclick = () => {
+    newGameAIButton.classList.add("button-highlight");
+    newGameButton.classList.remove("button-highlight");
+    startAIGame();
+}
 
 // start game
 startTwoPlayerGame();
