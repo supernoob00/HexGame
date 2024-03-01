@@ -1,0 +1,81 @@
+html, body {
+  background-color: #2f2b3a;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  flex-direction: column;
+  justify-content: center;
+  display: flex;
+}
+
+.game {
+  flex-basis: auto;
+  align-items: center;
+  gap: 60px;
+  margin: 0 auto;
+  display: flex;
+}
+
+.game-area {
+  flex-direction: column;
+  align-items: center;
+  display: flex;
+}
+
+#game-info {
+  color: #fff;
+  margin: 12px;
+  font-size: 26px;
+}
+
+#game-canvas {
+  border-radius: 20px;
+  box-shadow: 0 4px 12px #0000001a;
+}
+
+.start-game-buttons {
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 36px;
+  display: flex;
+}
+
+.start-ai-game-buttons {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  display: flex;
+}
+
+button {
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  background: #5e5df0;
+  border: 0;
+  border-radius: 999px;
+  outline: 0 solid #0000;
+  min-width: 150px;
+  padding: 8px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  box-shadow: 0 10px 20px -10px #5e5df0;
+}
+
+.button-highlight {
+  background: #5f9ea0;
+}
+
+.ai-game-options {
+  color: #fff;
+  flex-direction: column;
+  gap: 6px;
+  font-family: Inter, Helvetica, Apple Color Emoji, Segoe UI Emoji, NotoColorEmoji, Noto Color Emoji, Segoe UI Symbol, Android Emoji, EmojiSymbols, -apple-system, system-ui, Segoe UI, Roboto, Helvetica Neue, Noto Sans, sans-serif;
+  display: flex;
+}
+
+/*# sourceMappingURL=index.dd371b82.css.map */
